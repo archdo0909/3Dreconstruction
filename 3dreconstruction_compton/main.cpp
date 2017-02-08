@@ -4,22 +4,19 @@
 #include <gl/GLU.h>
 #include <gl/glut.h>
 #include <math.h>
+#include <stdio.h>
 
-int max_x= 40;
-int max_y= 40;
-int max_z= 100;
 
-int p = 2*max_x + 1;
-int q = 2*max_y + 1;
-int r = max_z;
+//int p = 2*max_x + 1;
+//int q = 2*max_y + 1;
+//int r = max_z;
+
 int window_size_x = 500;
 int window_size_y = window_size_x;
 //double View_from[3] = {-8.0 ,8.0, 0.0};
-double View_from[3] = {-10.0, 10.0, 5.0};
+double View_from[3] = {-10.0, 20.0, 0.0};
 //double View_to[3]= {0.0, -10.0, 0.0};
-double View_to[3] = {10.0, -10.0, 0.0};
-
-////change
+double View_to[3] = {10.0, -20.0, 0.0};
 
 using namespace std;
 
@@ -30,7 +27,12 @@ typedef struct Vector3D{
 	double z;
 	int vol;
 } point;
-static point voxel_position[70][70][100];
+
+// nums of inside array expressed as [x * y * z]
+static point voxel_position[11][11][11];   
+int max_x = 11;
+int max_y = 11;
+int max_z = 11;
 
 struct Energy_deposit{
 	double energy;
@@ -102,16 +104,19 @@ void Reconstruction()
 
 	}
 	cout << "insert_info" << endl;
-	for(i = 0; i < p ; i++)
+
+	for(i = 0; i < max_x ; i++)
 	{
-		for (j = 0; j < q; j++)
+		for (j = 0; j < max_y; j++)
 		{
-			for(k=0; k < r; k++)
+			for(k=0; k < max_z; k++)
 			{
-				voxel_position[i][j][k].x=(double) (i-max_x);
-				voxel_position[i][j][k].y=(double) (j-max_y);
+				//printf("%d, %d, %d \n", (i-(max_x - 1)/2), (j-(max_y - 1)/2), k);
+				voxel_position[i][j][k].x=(double) (i-(max_x - 1)/2);
+				voxel_position[i][j][k].y=(double) (j-(max_y - 1)/2);
 				voxel_position[i][j][k].z=(double) k;
-				voxel_position[i][j][k].vol=0;
+				voxel_position[i][j][k].vol=0; 
+				//printf("%f, %f, %f \n", voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z);
 			}
 		}
 	}
@@ -119,9 +124,9 @@ void Reconstruction()
 
     int cnt=0;
 
-	for(i = 0; i < 10; i++){
-		for (j = 0; j < 10; j++){
-			for(z = 0; z < 1; z++){
+	for(i = 0; i < max_x; i++){
+		for (j = 0; j < max_y; j++){
+			for(z = 0; z < max_z; z++){
 				for(k = 0; k < 1; k++){
 					if(Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) <= 
 						acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) + scattering_angle(d1_dep[k], d2_dep[k]) &&
@@ -199,9 +204,9 @@ void voxel_simulation()
 
 	cout << "complete1" << endl;
 
-	for(i = 0; i < 10; i++){
-		for(j = 0; j< 10; j++){
-			for(k = 0; k < 1; k++){
+	for(i = 0; i < max_x; i++){
+		for(j = 0; j< max_y; j++){
+			for(k = 0; k < max_z; k++){
 				if(voxel_position[i][j][k].vol > 0){
 					cnt++;
 					glColor3f(0.0, 0.5, 0.8);
