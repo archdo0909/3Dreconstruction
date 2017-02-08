@@ -4,7 +4,9 @@
 #include <gl/GLU.h>
 #include <gl/glut.h>
 #include <math.h>
+#include <cmath>
 #include <stdio.h>
+#include <fstream>
 
 
 //int p = 2*max_x + 1;
@@ -43,23 +45,37 @@ double get_vector_length (point v)
 	return pow( (v.x * v.x) + (v.y * v.y) + (v.z * v.z), 0.5 );
 }
 
+double get_new_vector_length(double x1,double y1, double z1, double x2, double y2, double z2)
+{
+	return pow((pow((x1 - x2), 2) + pow((y1 - y2), 2), pow((z1 - z2), 2)), 1/2);
+}
+
 // vector inner product
 double inner_product(point vl, point vr)
 {
 	return vl.x * vr.x + vl.y * vr.y + vl.z * vr.z;
 }
 
-double Angle_vector(point A, point B)
-{
-	double length_A = get_vector_length(A);
-	double lenght_B = get_vector_length(B);
+//double Angle_vector(point A, point B)
+//{
+//	double length_A = get_vector_length(A);
+//	double lenght_B = get_vector_length(B);
+//
+//	double cos_theta = inner_product(A, B) / (length_A * length_A);
+//
+//	double theta = acos(cos_theta);
+//	// to make degree
+//
+//	// theta_deg = theta * 180 / PI;
+//
+//	return theta;
+//}
+double Angle_vector(double x1, double y1, double z1, double x2, double y2, double z2) {
+	double length_A = sqrt(pow(x1, 2) + pow(y1, 2) + pow(z1, 2));
+	double length_B = sqrt(pow(x2, 2) + pow(y2, 2) + pow(z2, 2));
 
-	double cos_theta = inner_product(A, B) / (length_A * length_A);
-
+	double cos_theta = ((x1 * x2) + (y1 * y2) + (z1 * z2)) / (length_A * length_B);
 	double theta = acos(cos_theta);
-	// to make degree
-
-	// theta_deg = theta * 180 / PI;
 
 	return theta;
 }
@@ -124,14 +140,22 @@ void Reconstruction()
 
     int cnt=0;
 
+	ofstream fout;
+	fout.open("Coordinates.txt");
+
 	for(i = 0; i < max_x; i++){
 		for (j = 0; j < max_y; j++){
 			for(z = 0; z < max_z; z++){
 				for(k = 0; k < 1; k++){
-					if(Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) <= 
+				/*	if(Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) <= 
 						acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) + scattering_angle(d1_dep[k], d2_dep[k]) &&
 						Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) >= 
-						scattering_angle(d1_dep[k], d2_dep[k]) - acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) ){
+						scattering_angle(d1_dep[k], d2_dep[k]) - acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) ){*/
+					if(Angle_vector((d1[k].x - d2[k].x), (d1[k].y - d2[k].y), (d1[k].z - d2[k].z), (voxel_position[i][j][z].x - d1[k].x), 
+						(voxel_position[i][j][z].y - d1[k].y), (voxel_position[i][j][z].z - d1[k].z)) <= acos(0.5 / get_new_vector_length(d1[k].x, d1[k].y, d1[k].z, voxel_position[i][j][z].x, 
+							voxel_position[i][j][z].y, voxel_position[i][j][z].z) + scattering_angle(d1_dep[k], d2_dep[k])) && Angle_vector((d1[k].x - d2[k].x), (d1[k].y - d2[k].y), (d1[k].z - d2[k].z), (voxel_position[i][j][z].x - d1[k].x),
+							(voxel_position[i][j][z].y - d1[k].y), (voxel_position[i][j][z].z - d1[k].z)) >= scattering_angle(d1_dep[k], d2_dep[k]) - acos(0.5 / get_new_vector_length(d1[k].x, d1[k].y, d1[k].z, voxel_position[i][j][z].x,
+								voxel_position[i][j][z].y, voxel_position[i][j][z].z))){
 						voxel_position[i][j][z].vol = voxel_position[i][j][z].vol + 1;
 						cnt++;
 					//cout << Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) << endl;
@@ -140,8 +164,21 @@ void Reconstruction()
 			}
 		}
 	}
+	for (i = 0; i < max_x; i++) {
+		for (j = 0; j < max_y; j++) {
+			for (k = 0; k < max_z; k++) {
+				if (voxel_position[i][j][k].vol > 0){
+					fout << voxel_position[i][j][k].x << "," << voxel_position[i][j][k].y << ", " << voxel_position[i][j][k].z << ", " << voxel_position[i][j][k].vol << endl;
+				}
+			}
+		}
+	}
+	if (fout.is_open() == true)
+	{
+		fout.close();
+	}
+	
 	cout<<"done1"<<endl;
-
 }
 
 void voxel_simulation()
@@ -152,7 +189,7 @@ void voxel_simulation()
 	//struct Energy_deposit d1_dep[1];
 	//struct Energy_deposit d2_dep[1];
 
-	int i, j, k, z;
+	int i, j, k;
 	int cnt=0;
 
 	Reconstruction();
@@ -204,7 +241,7 @@ void voxel_simulation()
 
 	cout << "complete1" << endl;
 
-	for(i = 0; i < max_x; i++){
+	/*for(i = 0; i < max_x; i++){
 		for(j = 0; j< max_y; j++){
 			for(k = 0; k < max_z; k++){
 				if(voxel_position[i][j][k].vol > 0){
@@ -217,7 +254,7 @@ void voxel_simulation()
 				}
 			}
 		}
-	}
+	}*/
 	cout << cnt << endl;
 	//glPushMatrix();
 }
