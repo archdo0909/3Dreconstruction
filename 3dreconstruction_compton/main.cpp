@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <tchar.h>
 #include <Windows.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
@@ -6,11 +7,21 @@
 #include <math.h>
 #include <stdio.h>
 #include <fstream>
+#include "style.h"
 
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable:4996)
 
+#define txt_file "E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\Data\test.txt"
 //int p = 2*max_x + 1;
 //int q = 2*max_y + 1;
 //int r = max_z;
+
+extern tmp_point d1[MAX_DATA];
+extern tmp_point d2[MAX_DATA];
+extern unsigned int num_points; 
+extern bool loadtxtfile(static char* txt_file);
+
 
 int window_size_x = 1000;
 int window_size_y = window_size_x;
@@ -106,10 +117,10 @@ point compose_vector(point A, point B)
 
 	return C;
 }
-double scattering_angle(Energy_deposit A, Energy_deposit B)
+double scattering_angle(double A, double B)
 {
 
-	double Angle = (1 + 0.511*(1/(A.energy + B.energy) - 1 / (B.energy)));
+	double Angle = (1 + 0.511*(1/(A + B) - 1 / (B)));
 	double Angle_deg = acos(Angle);
 	return Angle;
 
@@ -179,7 +190,7 @@ void View_control2(bool vector_flag){
 
 void Reconstruction()
 {
-	point d1[1];
+	/*point d1[1];
 	point d2[1];
 	struct Energy_deposit d1_dep[1];
 	struct Energy_deposit d2_dep[1];
@@ -188,19 +199,22 @@ void Reconstruction()
 
 	for(i = 0; i < 1; i++)
 	{
-		d1[i].x = 0.0;
-		d1[i].y = 0.0;
-		d1[i].z = 0.0;
+	d1[i].x = 0.0;
+	d1[i].y = 0.0;
+	d1[i].z = 0.0;
 
-		d2[i].x = 0.0;
-		d2[i].y = 0.0;
-		d2[i].z = -80.0;
+	d2[i].x = 0.0;
+	d2[i].y = 0.0;
+	d2[i].z = -80.0;
 
-		d1_dep[i].energy = 0.22;
-		d2_dep[i].energy = 0.44;
+	d1_dep[i].energy = 0.22;
+	d2_dep[i].energy = 0.44;
 
 	}
-	cout << "insert_info" << endl;
+	cout << "insert_info" << endl;*/
+
+	int i, j, k, m;
+    m = num_points;
 
 	for(i = 0; i < max_x ; i++)
 	{
@@ -239,8 +253,8 @@ void Reconstruction()
 					//}
 					if(Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z)
 						<= 0.25 / get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x, 
-						voxel_position[i][j][k].y, voxel_position[i][j][k].z) + scattering_angle(d1_dep[m], d2_dep[m]) && Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z)
-						>= scattering_angle(d1_dep[m], d2_dep[m]) - 0.25 / get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,
+						voxel_position[i][j][k].y, voxel_position[i][j][k].z) + scattering_angle(d1[m].energy, d2[m].energy) && Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z)
+						>= scattering_angle(d1[m].energy, d2[m].energy) - 0.25 / get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,
 						voxel_position[i][j][k].y, voxel_position[i][j][k].z)){
 							voxel_position[i][j][k].vol = voxel_position[i][j][k].vol + 1;
 							cnt++;
@@ -347,7 +361,7 @@ void voxel_simulation()
 			}
 		}
 	}
-	printf("%lf, %lf \n", max, min);
+	//printf("%lf, %lf \n", max, min);
 
 	for(i = 0; i < max_x; i++){
 		for(j = 0; j< max_y; j++){
