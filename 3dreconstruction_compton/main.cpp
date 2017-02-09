@@ -12,13 +12,19 @@
 //int q = 2*max_y + 1;
 //int r = max_z;
 
-int window_size_x = 500;
+int window_size_x = 1000;
 int window_size_y = window_size_x;
+bool up_flag = false;
+bool down_flag = false;
+bool MouseFlagLeft = false;
+bool MouseFlagRight = false;
+bool MouseFlagMiddle = false;
+bool View_point_flag = false;
 //double View_from[3] = {-8.0 ,8.0, 0.0};
-double View_from[3] = {-10.0, 20.0, 0.0};
-//double View_to[3]= {0.0, -10.0, 0.0};
-double View_to[3] = {10.0, -20.0, 0.0};
-
+double View_from[3] = {0.0, 30.0, -80.0};
+double View_to[3] = {0.0, -40.0, 80.0};
+double View_from2[3] = {0.0, 10.0, 0.01 };
+double View_to2[3] = {0.0, -10.0, 0.0 };
 using namespace std;
 
 // vector
@@ -30,10 +36,10 @@ typedef struct Vector3D{
 } point;
 
 // nums of inside array expressed as [x * y * z]
-static point voxel_position[11][11][11];   
-int max_x = 11;
-int max_y = 11;
-int max_z = 11;
+static point voxel_position[21][21][21];   
+int max_x = 21;
+int max_y = 21;
+int max_z = 21;
 
 struct Energy_deposit{
 	double energy;
@@ -108,6 +114,69 @@ double scattering_angle(Energy_deposit A, Energy_deposit B)
 	return Angle;
 
 }
+void View_control(bool vector_flag){
+	double View_distance;
+	double temp[5];
+	temp[2] = View_from[2] - View_to[2];
+	temp[1] = View_from[0] - View_to[0];
+	temp[0] = pow(temp[1], 2.0) + pow(temp[2], 2.0);
+	View_distance = pow(temp[0], 0.5);
+	//	printf("%f\n", View_distance);
+	temp[0] = View_from[2] - View_to[2];
+	temp[3] = temp[0] / View_distance;
+	temp[1] = View_from[0] - View_to[0];
+	temp[4] = temp[1] / View_distance;
+	temp[2] = atan2(temp[4], temp[3]);
+	//temp[2] = acos(temp[1]);
+	if (vector_flag) temp[2] = temp[2] + 0.01;
+	else temp[2] = temp[2] - 0.01;
+	temp[0] = View_distance * cos(temp[2]);
+	temp[1] = View_distance * sin(temp[2]);
+	View_from[2] = View_to[2] + temp[0];
+	View_from[0] = View_to[0] + temp[1];
+
+}
+void View_control_up_down(bool vector_flag){
+	double View_distance;
+	double temp[5];
+	temp[2] = View_from[1] - View_to[1];
+	temp[1] = View_from[0] - View_to[0];
+	temp[0] = pow(temp[1], 2.0) + pow(temp[2], 2.0);
+	View_distance = pow(temp[0], 0.5);
+	//	printf("%f\n", View_distance);
+	temp[0] = View_from[1] - View_to[1];
+	temp[3] = temp[0] / View_distance;
+	temp[1] = View_from[0] - View_to[0];
+	temp[4] = temp[1] / View_distance;
+	temp[2] = atan2(temp[4], temp[3]);
+	//temp[2] = acos(temp[1]);
+	if (vector_flag) temp[2] = temp[2] + 0.01;
+	else temp[2] = temp[2] - 0.01;
+	temp[0] = View_distance * cos(temp[2]);
+	temp[1] = View_distance * sin(temp[2]);
+	View_from[1] = View_to[1] + temp[0];
+	View_from[0] = View_to[0] + temp[1];
+}
+void View_control2(bool vector_flag){
+	double View_distance;
+	double temp[5];
+	temp[2] = View_from2[2] - View_to2[2];
+	temp[1] = View_from2[0] - View_to2[0];
+	temp[0] = pow(temp[1], 2.0) + pow(temp[2], 2.0);
+	View_distance = pow(temp[0], 0.5);
+	temp[0] = View_from2[2] - View_to2[2];
+	temp[3] = temp[0] / View_distance;
+	temp[1] = View_from2[0] - View_to2[0];
+	temp[4] = temp[1] / View_distance;
+	temp[2] = atan2(temp[4], temp[3]);
+	if (vector_flag) temp[2] = temp[2] + 0.01;
+	else temp[2] = temp[2] - 0.01;
+	temp[0] = View_distance * cos(temp[2]);
+	temp[1] = View_distance * sin(temp[2]);
+	View_from2[2] = View_to2[2] + temp[0];
+	View_from2[0] = View_to2[0] + temp[1];
+}
+
 void Reconstruction()
 {
 	point d1[1];
@@ -152,10 +221,11 @@ void Reconstruction()
 
     int cnt=0;
 
-	ofstream fout;
-	fout.open("Coordinates.txt");
+	/*ofstream fout;
+	fout.open("Coordinates.txt");*/
 
 	for(i = 0; i < max_x; i++){
+
 		for (j = 0; j < max_y; j++){
 			for(k = 0; k < max_z; k++){
 				for(m = 0; m < 1; m++){
@@ -168,9 +238,9 @@ void Reconstruction()
 					////cout << Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) << endl;
 					//}
 					if(Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z)
-						<= 0.5 / get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x, 
+						<= 0.25 / get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x, 
 						voxel_position[i][j][k].y, voxel_position[i][j][k].z) + scattering_angle(d1_dep[m], d2_dep[m]) && Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z)
-						>= scattering_angle(d1_dep[m], d2_dep[m]) - 0.5 / get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,
+						>= scattering_angle(d1_dep[m], d2_dep[m]) - 0.25 / get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,
 						voxel_position[i][j][k].y, voxel_position[i][j][k].z)){
 							voxel_position[i][j][k].vol = voxel_position[i][j][k].vol + 1;
 							cnt++;
@@ -179,27 +249,27 @@ void Reconstruction()
 			}
 		}
 	}
-	for (i = 0; i < max_x; i++) {
-		for (j = 0; j < max_y; j++) {
-			for (k = 0; k < max_z; k++) {
-				for(m = 0 ; m < 1; m++){
-				//if (voxel_position[i][j][k].vol > 0){
-					//fout << voxel_position[i][j][k].x << "," << voxel_position[i][j][k].y << ", " << voxel_position[i][j][k].z << ", " << voxel_position[i][j][k].vol << endl;
-					fout <<Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z) << ", "
-						<< 0.5/get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,voxel_position[i][j][k].y, voxel_position[i][j][k].z) << ", " 
-						<< scattering_angle(d1_dep[m], d2_dep[m])  <<"," << i << ", " << j << ", " << k << endl;  
-					//fout<<get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,voxel_position[i][j][k].y, voxel_position[i][j][k].z) <<", " << i << ", " << j << ", " << k <<endl;
-				//}
-				
-					//fout << Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z) <<", " << i << ", " << j << ", " << k << endl; 
-				}
-			}
-		}
-	}
-	if (fout.is_open() == true)
-	{
-		fout.close();
-	}
+	//for (i = 0; i < max_x; i++) {
+	//	for (j = 0; j < max_y; j++) {
+	//		for (k = 0; k < max_z; k++) {
+	//			for(m = 0 ; m < 1; m++){
+	//			//if (voxel_position[i][j][k].vol > 0){
+	//				//fout << voxel_position[i][j][k].x << "," << voxel_position[i][j][k].y << ", " << voxel_position[i][j][k].z << ", " << voxel_position[i][j][k].vol << endl;
+	//				fout <<Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z) << ", "
+	//					<< 0.5/get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,voxel_position[i][j][k].y, voxel_position[i][j][k].z) << ", " 
+	//					<< scattering_angle(d1_dep[m], d2_dep[m])  <<"," << i << ", " << j << ", " << k << endl;  
+	//				//fout<<get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,voxel_position[i][j][k].y, voxel_position[i][j][k].z) <<", " << i << ", " << j << ", " << k <<endl;
+	//			//}
+	//			
+	//				//fout << Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z) <<", " << i << ", " << j << ", " << k << endl; 
+	//			}
+	//		}
+	//	}
+	//}
+	//if (fout.is_open() == true)
+	//{
+	//	fout.close();
+	//}
 
 	cout<<"done1"<<endl;
 
@@ -208,13 +278,11 @@ void Reconstruction()
 void voxel_simulation()
 {
 
-	//point d1[1];
-	//point d2[1];
-	//struct Energy_deposit d1_dep[1];
-	//struct Energy_deposit d2_dep[1];
-
 	int i, j, k, z;
 	int cnt=0;
+
+	double max = -10.0;
+	double min = 10000.0;
 
 	Reconstruction();
 
@@ -265,16 +333,47 @@ void voxel_simulation()
 
 	cout << "complete1" << endl;
 
+	GLfloat changing[] = {0.5, 0.5, 1.0, 1.0}; //Blue
+
+	for(i = 0; i < max_x; i++){
+		for(j = 0; j< max_y; j++){
+			for(k = 0; k < max_z; k++){
+				if(voxel_position[i][j][k].vol > max){
+					max = voxel_position[i][j][k].vol;
+				}
+				if(voxel_position[i][j][k].vol < min){
+					min = voxel_position[i][j][k].vol;
+				}
+			}
+		}
+	}
+	printf("%lf, %lf \n", max, min);
+
 	for(i = 0; i < max_x; i++){
 		for(j = 0; j< max_y; j++){
 			for(k = 0; k < max_z; k++){
 				if(voxel_position[i][j][k].vol > 0){
-					cnt++;
-					glColor3f(0.0, 0.5, 0.8);
 					glPushMatrix();
+					//glEnable(GL_BLEND);
+					if(voxel_position[i][j][k].vol < (max + min) / 2){
+						changing[0] = (voxel_position[i][j][k].vol - min) / ((max - min) / 2)  ;
+						changing[1] = 0.1;
+						changing[2] = ((max + min) / 2 - voxel_position[i][j][k].vol)/((max - min) / 2);
+						glColor3f((voxel_position[i][j][k].vol - min) / ((max - min) / 2), 0.1, ((max + min) / 2 - voxel_position[i][j][k].vol)/((max - min) / 2));
+					}
+					else{
+						changing[0] = (max - voxel_position[i][j][k].vol) / ((max - min) / 2)  ;
+						changing[1] = (voxel_position[i][j][k].vol - (max + min) / 2) / ((max - min) / 2);
+						changing[2] = 0.1;
+						glColor3f((voxel_position[i][j][k].vol - (max + min) / 2) / ((max - min) / 2),(max - voxel_position[i][j][k].vol) / ((max - min) / 2), 0.1);
+						//printf("%f, %f, %f \n", changing[0], changing[1], changing[2]);
+					}
+					//glColor3f(0.0, 0.5, 0.8);
+					//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, changing);
 					glTranslated((GLdouble)voxel_position[i][j][k].x, (GLdouble)voxel_position[i][j][k].z, (GLdouble)voxel_position[i][j][k].y);
-					glutSolidCube(1);
+					glutSolidCube(0.25);
 					glPopMatrix();
+					cnt++;
 				}
 			}
 		}
@@ -287,6 +386,18 @@ void display()
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
+
+	if (MouseFlagLeft){
+		if (View_point_flag) View_control(false);
+		else View_control2(false);
+	}
+	else if (MouseFlagRight){
+		if (View_point_flag) View_control(true);
+		else View_control2(true);
+	}
+	if (up_flag) View_control_up_down(true);
+	if (down_flag) View_control_up_down(false);
+
 
 	gluLookAt(View_from[0], View_from[1], View_from[2], View_to[0], View_to[1], View_to[2], 0.0, 1.0, 0.0);
 
@@ -307,10 +418,61 @@ void display()
 
 
 }
+
+void mouse(int button, int state, int x, int y)
+{
+	switch (button) {
+	case GLUT_LEFT_BUTTON:
+		switch (state) {
+		case GLUT_UP:
+			if (MouseFlagLeft){
+				MouseFlagLeft = false;
+			}
+			break;
+		case GLUT_DOWN:
+			MouseFlagLeft = true;
+			if (x < window_size_x * 2 / 3) View_point_flag = true;
+			else View_point_flag = false;
+			break;
+		default:
+			break;
+		}
+		break;
+	case GLUT_MIDDLE_BUTTON:
+		switch (state) {
+		case GLUT_UP:
+			if (MouseFlagRight) MouseFlagMiddle = false;
+			break;
+		case GLUT_DOWN:
+			MouseFlagMiddle = true;
+			break;
+		default:
+			break;
+		}
+		break;
+	case GLUT_RIGHT_BUTTON:
+		switch (state) {
+		case GLUT_UP:
+			if (MouseFlagRight) MouseFlagRight = false;
+			break;
+		case GLUT_DOWN:
+			MouseFlagRight = true;
+			if (x < window_size_x * 2 / 3) View_point_flag = true;
+			else View_point_flag = false;
+			break;
+		default:
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 void init()
 {
 	glClearColor(1.0, 1.0, 1.0, 1.0);
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 	//glEnable(GL_LIGHTING);
@@ -336,7 +498,7 @@ void reshape(int w, int h)
 	glViewport(0,0, (GLsizei) w, (GLsizei) h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(50.0, (GLfloat) w/ (GLfloat) h, 1.0, 20.0 );
+	gluPerspective(50.0, (GLfloat) w/ (GLfloat) h, 1.0, 1000.0 );
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -351,7 +513,8 @@ int main(int argc, char *argv[])
 	glutInitWindowPosition(0, 0);
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
-
+	glutMouseFunc(mouse);
+	//cout << MouseFlagRight << endl;
 	init();
 	glutMainLoop();
 
