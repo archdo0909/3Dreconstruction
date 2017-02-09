@@ -1,18 +1,12 @@
-﻿8/02/2017 5:28:07 PM にビルドを開始しました。
+﻿9/02/2017 11:21:34 AM にビルドを開始しました。
      1>ノード 2 上のプロジェクト "E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\3dreconstruction_compton.vcxproj" (build ターゲット)。
      1>InitializeBuildStatus:
          "AlwaysCreate" が指定されたため "Debug\3dreconstruction_compton.unsuccessfulbuild" を作成しています。
        ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
-         main.cpp
-     1>e:\doyeon\document\5. program\compton_ray\3. 3d_reconstruction\visualstudio\3dreconstruction\3dreconstruction_compton\main.cpp(212): warning C4305: '引数' : 'double' から 'GLfloat' へ切り詰めます。
-     1>e:\doyeon\document\5. program\compton_ray\3. 3d_reconstruction\visualstudio\3dreconstruction\3dreconstruction_compton\main.cpp(155): warning C4101: 'z' : ローカル変数は 1 度も使われていません。
+         すべての出力が最新のものです。
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\Debug\3dreconstruction_compton.exe" /NOLOGO opengl32.lib glut32.lib glu32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\3dreconstruction_compton.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\Debug\3dreconstruction_compton.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\Debug\3dreconstruction_compton.lib" /MACHINE:X86 Debug\main.obj
-         LINK : 前回のインクリメンタル リンクで E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\Debug\3dreconstruction_compton.exe が見つからなかったか、ビルドされませんでした。フル リンクを行います。
+         すべての出力が最新のものです。
          3dreconstruction_compton.vcxproj -> E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\Debug\3dreconstruction_compton.exe
-       Manifest:
-         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\Debug\3dreconstruction_compton.exe;#1" /manifest Debug\3dreconstruction_compton.exe.intermediate.manifest
        FinalizeBuildStatus:
          ファイル "Debug\3dreconstruction_compton.unsuccessfulbuild" を削除しています。
          "Debug\3dreconstruction_compton.lastbuildstate" のタッチ タスクを実行しています。
@@ -20,4 +14,4 @@
 
 ビルドに成功しました。
 
-経過時間 00:00:00.95
+経過時間 00:00:00.04

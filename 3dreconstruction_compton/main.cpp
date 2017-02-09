@@ -5,6 +5,7 @@
 #include <gl/glut.h>
 #include <math.h>
 #include <stdio.h>
+#include <fstream>
 
 
 //int p = 2*max_x + 1;
@@ -43,25 +44,52 @@ double get_vector_length (point v)
 	return pow( (v.x * v.x) + (v.y * v.y) + (v.z * v.z), 0.5 );
 }
 
+double get_new_vector_length(double x1,double y1, double z1, double x2, double y2, double z2)
+{
+	double length = sqrt( pow( (x1 - x2) , 2) + pow( (y1 - y2) , 2) + pow( (z1 - z2) , 2));
+	return length;
+}
+
 // vector inner product
 double inner_product(point vl, point vr)
 {
 	return vl.x * vr.x + vl.y * vr.y + vl.z * vr.z;
 }
 
-double Angle_vector(point A, point B)
-{
-	double length_A = get_vector_length(A);
-	double lenght_B = get_vector_length(B);
+//double Angle_vector(point A, point B)
+//{
+//	double length_A = get_vector_length(A);
+//	double lenght_B = get_vector_length(B);
+//
+//	double cos_theta = inner_product(A, B) / (length_A * length_A);
+//
+//	double theta = acos(cos_theta);
+//	// to make degree
+//
+//	// theta_deg = theta * 180 / PI;
+//
+//	return theta;
+//}
 
-	double cos_theta = inner_product(A, B) / (length_A * length_A);
+double Angle_vector(double x1, double y1, double z1, double x2, double y2, double z2) {
+	double length_A = pow((pow(x1, 2) + pow(y1, 2) + pow(z1, 2)),1/2);
+	double length_B = pow((pow(x2, 2) + pow(y2, 2) + pow(z2, 2)),1/2);
 
+	double cos_theta = ((x1 * x2) + (y1 * y2) + (z1 * z2)) / (length_A * length_B);
 	double theta = acos(cos_theta);
-	// to make degree
-
-	// theta_deg = theta * 180 / PI;
 
 	return theta;
+}
+
+double Angle_vector_com(double d1x, double d1y, double d1z, double d2x, double d2y, double d2z, double x1, double y1, double z1)
+{
+	double length_d2d1 = sqrt( pow((d1x - d2x),2) + pow((d1y-d2y),2) + pow( (d1z - d2z) ,2));
+	double length_d1x = sqrt( pow((x1 - d1x) ,2) + pow ((y1 - d1y) ,2) + pow ((z1 - d1z) ,2));
+
+	double cos_theta = ((d1x - d2x)*(x1 - d1x) + (d1y-d2y)*(y1 - d1y) + (d1z - d2z)*(z1 - d1z)) / (length_d2d1 * length_d1x);
+	double theta = acos(cos_theta);
+	
+	return cos_theta;
 }
 point compose_vector(point A, point B)
 {
@@ -74,9 +102,9 @@ point compose_vector(point A, point B)
 }
 double scattering_angle(Energy_deposit A, Energy_deposit B)
 {
-	double Angle;
 
-	Angle = acos(1 + 0.511*(1/(A.energy + B.energy) - 1 / (B.energy)));
+	double Angle = (1 + 0.511*(1/(A.energy + B.energy) - 1 / (B.energy)));
+	double Angle_deg = acos(Angle);
 	return Angle;
 
 }
@@ -87,7 +115,7 @@ void Reconstruction()
 	struct Energy_deposit d1_dep[1];
 	struct Energy_deposit d2_dep[1];
 
-	int i, j, k, z; 
+	int i, j, k, m ; 
 
 	for(i = 0; i < 1; i++)
 	{
@@ -124,22 +152,55 @@ void Reconstruction()
 
     int cnt=0;
 
+	ofstream fout;
+	fout.open("Coordinates.txt");
+
 	for(i = 0; i < max_x; i++){
 		for (j = 0; j < max_y; j++){
-			for(z = 0; z < max_z; z++){
-				for(k = 0; k < 1; k++){
-					if(Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) <= 
-						acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) + scattering_angle(d1_dep[k], d2_dep[k]) &&
-						Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) >= 
-						scattering_angle(d1_dep[k], d2_dep[k]) - acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) ){
-						voxel_position[i][j][z].vol = voxel_position[i][j][z].vol + 1;
-						cnt++;
-					//cout << Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) << endl;
+			for(k = 0; k < max_z; k++){
+				for(m = 0; m < 1; m++){
+					//if(Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) <= 
+					//	acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) + scattering_angle(d1_dep[k], d2_dep[k]) &&
+					//	Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) >= 
+					//	scattering_angle(d1_dep[k], d2_dep[k]) - acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) ){
+					//	voxel_position[i][j][z].vol = voxel_position[i][j][z].vol + 1;
+					//	cnt++;
+					////cout << Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) << endl;
+					//}
+					if(Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z)
+						<= 0.5 / get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x, 
+						voxel_position[i][j][k].y, voxel_position[i][j][k].z) + scattering_angle(d1_dep[m], d2_dep[m]) && Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z)
+						>= scattering_angle(d1_dep[m], d2_dep[m]) - 0.5 / get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,
+						voxel_position[i][j][k].y, voxel_position[i][j][k].z)){
+							voxel_position[i][j][k].vol = voxel_position[i][j][k].vol + 1;
+							cnt++;
 					}
 				}
 			}
 		}
 	}
+	for (i = 0; i < max_x; i++) {
+		for (j = 0; j < max_y; j++) {
+			for (k = 0; k < max_z; k++) {
+				for(m = 0 ; m < 1; m++){
+				//if (voxel_position[i][j][k].vol > 0){
+					//fout << voxel_position[i][j][k].x << "," << voxel_position[i][j][k].y << ", " << voxel_position[i][j][k].z << ", " << voxel_position[i][j][k].vol << endl;
+					fout <<Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z) << ", "
+						<< 0.5/get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,voxel_position[i][j][k].y, voxel_position[i][j][k].z) << ", " 
+						<< scattering_angle(d1_dep[m], d2_dep[m])  <<"," << i << ", " << j << ", " << k << endl;  
+					//fout<<get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,voxel_position[i][j][k].y, voxel_position[i][j][k].z) <<", " << i << ", " << j << ", " << k <<endl;
+				//}
+				
+					//fout << Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z) <<", " << i << ", " << j << ", " << k << endl; 
+				}
+			}
+		}
+	}
+	if (fout.is_open() == true)
+	{
+		fout.close();
+	}
+
 	cout<<"done1"<<endl;
 
 }
