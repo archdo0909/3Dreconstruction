@@ -1,4 +1,4 @@
-﻿10/02/2017 3:57:30 PM にビルドを開始しました。
+﻿10/02/2017 4:44:47 PM にビルドを開始しました。
      1>ノード 2 上のプロジェクト "E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\3dreconstruction_compton.vcxproj" (build ターゲット)。
      1>InitializeBuildStatus:
          "AlwaysCreate" が指定されたため "Debug\3dreconstruction_compton.unsuccessfulbuild" を作成しています。
@@ -25,4 +25,4 @@
 
 ビルドに成功しました。
 
-経過時間 00:00:01.01
+経過時間 00:00:01.62

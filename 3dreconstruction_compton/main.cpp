@@ -222,7 +222,7 @@ void View_control(bool vector_flag){
 	temp[1] = View_from[0] - View_to[0];
 	temp[0] = pow(temp[1], 2.0) + pow(temp[2], 2.0);
 	View_distance = pow(temp[0], 0.5);
-	//	printf("%f\n", View_distance);
+		printf("%f\n", View_distance);
 	temp[0] = View_from[2] - View_to[2];
 	temp[3] = temp[0] / View_distance;
 	temp[1] = View_from[0] - View_to[0];
