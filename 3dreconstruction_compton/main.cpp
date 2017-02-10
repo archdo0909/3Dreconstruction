@@ -4,23 +4,20 @@
 #include <gl/GL.h>
 #include <gl/GLU.h>
 #include <gl/glut.h>
+#include <string.h>
+#include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
 #include <fstream>
 #include "style.h"
-
+#define MAX_LENGTH 300
 #define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable:4996)
 
-#define txt_file "E:\DoYeon\Document\5. Program\Compton_ray\3. 3d_reconstruction\VisualStudio\3Dreconstruction\3dreconstruction_compton\Data\test.txt"
+#define txt_file "Geant4(10cm).txt"
 //int p = 2*max_x + 1;
 //int q = 2*max_y + 1;
 //int r = max_z;
-
-extern tmp_point d1[MAX_DATA];
-extern tmp_point d2[MAX_DATA];
-extern unsigned int num_points; 
-extern bool loadtxtfile(static char* txt_file);
 
 
 int window_size_x = 1000;
@@ -38,6 +35,99 @@ double View_from2[3] = {0.0, 10.0, 0.01 };
 double View_to2[3] = {0.0, -10.0, 0.0 };
 using namespace std;
 
+#if 1
+
+tmp_point *point_array[MAX_DATA];
+unsigned int num_tmp_points;
+
+tmp_point d1[MAX_DATA];
+tmp_point d2[MAX_DATA];
+unsigned int num_points;
+
+void readtxt()
+{
+	int i;
+	double x,y,z,e;
+	char line[150];
+	//static char dummy[100];
+
+	FILE *in;
+
+	tmp_point *tmp_pnt;
+
+	in = fopen(txt_file, "rt");
+	if(in == NULL) printf("no data\n");
+
+	//ofstream fout;
+	//fout.open("insert_coordinates.txt");
+
+	cout << "reading file\n" << endl;
+	num_tmp_points = 0;
+	while (fgets(line, 150, in) !=NULL){
+		sscanf(line, "%d, %lf, %lf, %lf, %lf", &i, &x, &y, &z, &e);
+		tmp_pnt = (tmp_point *)malloc(sizeof(tmp_point));
+		point_array[num_tmp_points] = tmp_pnt;
+		tmp_pnt->num=i;
+		tmp_pnt->x = x;
+		tmp_pnt->y = y;
+		tmp_pnt->z = z;
+		tmp_pnt->energy = e;
+		num_tmp_points++;
+		//fout << i << ", " << x << ", " << y << ", " << z << ", " << e << "\n" << endl;
+		//printf("%d, %lf, %lf, %lf, %lf", i, x, y, z, e);
+	}
+	fclose(in);
+	if(num_tmp_points > 0){
+		printf("complete %d \n", num_tmp_points);
+	}
+	else
+		printf("failure..\n");
+
+	/*if (fout.is_open() == true)
+	{
+	fout.close();
+	}*/
+
+}
+
+void loadtxtfile()
+{
+	unsigned int i;
+
+	readtxt();
+
+	num_points = 0;
+	for(i = 0; i < num_tmp_points; i++){
+		if(i != num_tmp_points-1){
+			if(point_array[i]->energy < 0.66 && point_array[i]->num < 64 && point_array[i + 1]->num > 63){   //&& point_array[i + 1]->num > 63
+				if(point_array[i]->energy + point_array[i + 1]->energy <= 0.66444 && point_array[i]->energy + point_array[i + 1]->energy >= 0.65555){
+						d1[num_points].num=point_array[i]->num;
+					    d1[num_points].x=point_array[i]->x;
+						d1[num_points].y=point_array[i]->y;
+						d1[num_points].z=point_array[i]->z;
+						d1[num_points].energy=point_array[i]->energy;
+						d2[num_points].num=point_array[i+1]->num;
+						d2[num_points].x=point_array[i+1]->x;
+						d2[num_points].y=point_array[i+1]->y;
+						d2[num_points].z=point_array[i+1]->z;
+						d2[num_points].energy=point_array[i+1]->energy;
+						num_points++;
+				}
+			}
+		}
+	}
+	cout <<"matched number point values is \n" <<num_points << endl;
+	if(num_points == 0)
+		printf("no data matched\n");
+	for (i=0; i<num_tmp_points; i++)
+	{
+		free(point_array[i]);
+	}
+
+}
+#endif
+
+
 // vector
 typedef struct Vector3D{
 	double x;
@@ -47,10 +137,10 @@ typedef struct Vector3D{
 } point;
 
 // nums of inside array expressed as [x * y * z]
-static point voxel_position[21][21][21];   
-int max_x = 21;
-int max_y = 21;
-int max_z = 21;
+static point voxel_position[31][31][31];   
+int max_x = 31;
+int max_y = 31;
+int max_z = 31;
 
 struct Energy_deposit{
 	double energy;
@@ -213,6 +303,8 @@ void Reconstruction()
 	}
 	cout << "insert_info" << endl;*/
 
+	loadtxtfile();
+
 	int i, j, k, m;
     m = num_points;
 
@@ -239,10 +331,9 @@ void Reconstruction()
 	fout.open("Coordinates.txt");*/
 
 	for(i = 0; i < max_x; i++){
-
 		for (j = 0; j < max_y; j++){
 			for(k = 0; k < max_z; k++){
-				for(m = 0; m < 1; m++){
+				for(m = 0; m < num_points; m++){
 					//if(Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) <= 
 					//	acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) + scattering_angle(d1_dep[k], d2_dep[k]) &&
 					//	Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) >= 
@@ -263,22 +354,8 @@ void Reconstruction()
 			}
 		}
 	}
-	//for (i = 0; i < max_x; i++) {
-	//	for (j = 0; j < max_y; j++) {
-	//		for (k = 0; k < max_z; k++) {
-	//			for(m = 0 ; m < 1; m++){
-	//			//if (voxel_position[i][j][k].vol > 0){
-	//				//fout << voxel_position[i][j][k].x << "," << voxel_position[i][j][k].y << ", " << voxel_position[i][j][k].z << ", " << voxel_position[i][j][k].vol << endl;
-	//				fout <<Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z) << ", "
-	//					<< 0.5/get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,voxel_position[i][j][k].y, voxel_position[i][j][k].z) << ", " 
-	//					<< scattering_angle(d1_dep[m], d2_dep[m])  <<"," << i << ", " << j << ", " << k << endl;  
-	//				//fout<<get_new_vector_length(d1[m].x, d1[m].y, d1[m].z, voxel_position[i][j][k].x,voxel_position[i][j][k].y, voxel_position[i][j][k].z) <<", " << i << ", " << j << ", " << k <<endl;
-	//			//}
-	//			
-	//				//fout << Angle_vector_com(d1[m].x, d1[m].y, d1[m].z, d2[m].x, d2[m].y, d2[m].z, voxel_position[i][j][k].x, voxel_position[i][j][k].y, voxel_position[i][j][k].z) <<", " << i << ", " << j << ", " << k << endl; 
-	//			}
-	//		}
-	//	}
+	//for(m = 0 ; m < num_points; m++){
+	//	fout << m <<", "<< d1[m].num <<", "<< d2[m].num << endl; 
 	//}
 	//if (fout.is_open() == true)
 	//{
@@ -299,51 +376,6 @@ void voxel_simulation()
 	double min = 10000.0;
 
 	Reconstruction();
-
-	//for(i = 0; i < 1; i++)
-	//{
-	//	d1[i].x = 0.0;
-	//	d1[i].y = 0.0;
-	//	d1[i].z = 0.0;
-
-	//	d2[i].x = 0.0;
-	//	d2[i].y = 0.0;
-	//	d2[i].z = -80.0;
-
-	//	d1_dep[i].energy = 0.22;
-	//	d2_dep[i].energy = 0.44;
-
-	//}
-	//for(i = 0; i < p; i++)
-	//{
-	//	for (j = 0; j < q; j++)
-	//	{
-	//		for(k=0; k < r; k++)
-	//		{
-	//			voxel_position[i][j][k].x=i-max_x;
-	//			voxel_position[i][j][k].y=j-max_y;
-	//			voxel_position[i][j][k].z=k;
-	//			voxel_position[i][j][k].vol=0;
-	//		}
-	//	}
-	//}
-
-	//for(i = 0; i < 10; i++){
-	//	for (j = 0; j < 10; j++){
-	//		for(z = 0; z < 1; z++){
-	//			for(k = 0; k < 1; k++){
-	//				if(Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) <= 
-	//					acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) + scattering_angle(d1_dep[k], d2_dep[k]) &&
-	//					Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) >= 
-	//					scattering_angle(d1_dep[k], d2_dep[k]) - acos(0.5/get_vector_length(compose_vector(d1[k], voxel_position[i][j][z]))) ){
-	//						voxel_position[i][j][z].vol = voxel_position[i][j][z].vol + 1;
-	//						cnt++;
-	//						//cout << Angle_vector( compose_vector(d2[k],d1[k]), compose_vector(d1[k], voxel_position[i][j][z])) << endl;
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
 
 	cout << "complete1" << endl;
 
@@ -385,7 +417,7 @@ void voxel_simulation()
 					//glColor3f(0.0, 0.5, 0.8);
 					//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, changing);
 					glTranslated((GLdouble)voxel_position[i][j][k].x, (GLdouble)voxel_position[i][j][k].z, (GLdouble)voxel_position[i][j][k].y);
-					glutSolidCube(0.25);
+					glutSolidCube(0.5);
 					glPopMatrix();
 					cnt++;
 				}

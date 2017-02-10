@@ -1,4 +1,4 @@
-#define MAX_DATA 3000
+#define MAX_DATA 50000
 
 typedef struct tmp_point{
 	int num;
