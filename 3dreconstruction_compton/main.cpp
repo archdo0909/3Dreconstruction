@@ -447,7 +447,7 @@ void projection()
 		image[i].z = r*cos(((-30 + row)) * pi/180);
 		image[i].like = 0;
 	}
-
+	
 	for(j = 0; j < 3600; j++){
 		for(i = 0; i < data_num; i++){
 			if(vector_angle(image[j], d1[i],d1[i],d2[i]) <= scattering_angle(d1[i].energy, d2[i].energy) + (0.5 * pi/180)
@@ -455,6 +455,17 @@ void projection()
 				image[j].like = image[j].like + 1;
 			}
 		}
+	}
+	ofstream fout2;
+	fout2.open("image.txt");
+
+	for(i = 0; i < 3600; i++){
+		fout2<<i<<", "<<image[i].like<<endl;
+	}
+
+	if(fout2.is_open() == true)
+	{
+		fout2.close();
 	}
 	ofstream fout1;
 	fout1.open("reconstruction1.txt");
