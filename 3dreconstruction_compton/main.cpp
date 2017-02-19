@@ -6,11 +6,15 @@
 #include <gl/glut.h>
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
+#include <cmath>
 #include <stdio.h>
 #include <fstream>
 #include "style.h"
+#include "pixel.h"
 #define MAX_LENGTH 300
+#define image_pixel_num 60;
+#define PI 3.14159265359;
+//#define data_point_num 100;
 #define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable:4996)
 
@@ -33,6 +37,7 @@ double View_from[3] = {0.0, 30.0, -80.0};
 double View_to[3] = {0.0, -40.0, 80.0};
 double View_from2[3] = {0.0, 10.0, 0.01 };
 double View_to2[3] = {0.0, -10.0, 0.0 };
+//double x1, x2, x3, y1, y2, y3, z1, z2, z3;
 using namespace std;
 
 #if 1
@@ -40,9 +45,10 @@ using namespace std;
 tmp_point *point_array[MAX_DATA];
 unsigned int num_tmp_points;
 
-tmp_point d1[MAX_DATA];
-tmp_point d2[MAX_DATA];
+pixel d1[MAX_DATA];
+pixel d2[MAX_DATA];
 unsigned int num_points;
+double det_effi;
 
 void readtxt()
 {
@@ -116,6 +122,7 @@ void loadtxtfile()
 			}
 		}
 	}
+	det_effi = num_points / num_tmp_points; 
 	cout <<"matched number point values is \n" <<num_points << endl;
 	if(num_points == 0)
 		printf("no data matched\n");
@@ -127,12 +134,12 @@ void loadtxtfile()
 }
 #endif
 
-
 // vector
 typedef struct Vector3D{
 	double x;
 	double y;
 	double z;
+	double ramda;
 	int vol;
 } point;
 
@@ -141,6 +148,8 @@ static point voxel_position[31][31][31];
 int max_x = 31;
 int max_y = 31;
 int max_z = 31;
+static pixel image[360];
+
 
 struct Energy_deposit{
 	double energy;
@@ -151,18 +160,19 @@ double get_vector_length (point v)
 	return pow( (v.x * v.x) + (v.y * v.y) + (v.z * v.z), 0.5 );
 }
 
-double get_new_vector_length(double x1,double y1, double z1, double x2, double y2, double z2)
+double get_new_vector_length(pixel vector1, pixel vector2)
 {
-	double length = sqrt( pow( (x1 - x2) , 2) + pow( (y1 - y2) , 2) + pow( (z1 - z2) , 2));
+	double length = sqrt( pow( (vector1.x - vector2.x) , 2) + pow( (vector1.y - vector2.y) , 2) + pow( (vector1.z - vector2.z) , 2));
 	return length;
 }
 
 // vector inner product
-double inner_product(point vl, point vr)
+double inner_product(pixel vector1, pixel vector2)
 {
-	return vl.x * vr.x + vl.y * vr.y + vl.z * vr.z;
-}
+	double inner = vector1.x * vector2.x + vector1.y*vector2.y + vector1.z*vector2.z;
 
+	return inner;
+}
 //double Angle_vector(point A, point B)
 //{
 //	double length_A = get_vector_length(A);
@@ -177,7 +187,44 @@ double inner_product(point vl, point vr)
 //
 //	return theta;
 //}
+double vector_angle(pixel vector1, pixel vector2, pixel vector3, pixel vector4)
+{
+	double cos_Angle = ((vector1.x - vector2.x)*(vector3.x - vector4.x) + (vector1.y - vector2.y)*(vector3.y - vector4.y)
+		+ (vector1.z - vector2.z)*(vector3.z - vector4.z)) / (sqrt(pow((vector1.x - vector2.x), 2) + pow((vector1.y - vector2.y), 2)
+		+ pow((vector1.z - vector2.z), 2))*sqrt(pow((vector3.x - vector4.x), 2) + pow((vector3.y - vector4.y), 2) + pow((vector3.z - vector4.z), 2)));
 
+	return acos(cos_Angle);
+}
+double Klein_Nishina(double beta, double E)
+{
+	double r0 = 2.8179403227 * pow(10, -13.0);
+	double r = 0.66 / 0.511;
+	double K = (pow(r0, 2) / 2) * ((1 + pow(cos(beta), 2))*(1 + r*(1 - cos(beta))) + pow(r, 2)*(pow((1 - cos(beta)), 2))) / pow((1 + r*(1 - cos(beta))), 3);
+
+	return K;
+} 
+double system_matrix(pixel image1, pixel detector1, pixel detector2)
+{
+	double p = 3.0;
+	double pi = PI;
+	double t;
+	double Angle = acos(vector_angle(image1, detector1, detector1, detector2)); //radian
+	double V1Oj_len_2 = pow((image1.x - detector1.x), 2) + pow((image1.y - detector1.y), 2) + pow((image1.z - detector1.z), 2);
+	double sigma = 1.0;
+	double cos_beta = 1 - 0.511*((1 / detector2.energy) - (1 / (detector1.energy + detector2.energy)));
+	double beta = acos(cos_beta);
+	double cos_theta_Oj = abs(image1.z / sqrt(pow(image1.x ,2) + pow(image1.y,2) + pow(image1.z,2)));
+
+
+	if (abs(Angle - beta) < p*sigma) {
+		t = Klein_Nishina(beta, 0.66)*(cos_theta_Oj/V1Oj_len_2)*(1/(sqrt(2*pi)*sigma))*exp((-1/2)*pow((Angle-beta)/beta,2));
+	}
+	else {
+		t = 0;
+	}
+
+	return t;
+}
 double Angle_vector(double x1, double y1, double z1, double x2, double y2, double z2) {
 	double length_A = pow((pow(x1, 2) + pow(y1, 2) + pow(z1, 2)),1/2);
 	double length_B = pow((pow(x2, 2) + pow(y2, 2) + pow(z2, 2)),1/2);
@@ -215,6 +262,7 @@ double scattering_angle(double A, double B)
 	return Angle;
 
 }
+#if 1
 void View_control(bool vector_flag){
 	double View_distance;
 	double temp[5];
@@ -277,7 +325,8 @@ void View_control2(bool vector_flag){
 	View_from2[2] = View_to2[2] + temp[0];
 	View_from2[0] = View_to2[0] + temp[1];
 }
-
+#endif
+#if 0
 void Reconstruction()
 {
 	/*point d1[1];
@@ -330,6 +379,7 @@ void Reconstruction()
 	/*ofstream fout;
 	fout.open("Coordinates.txt");*/
 
+
 	for(i = 0; i < max_x; i++){
 		for (j = 0; j < max_y; j++){
 			for(k = 0; k < max_z; k++){
@@ -365,7 +415,88 @@ void Reconstruction()
 	cout<<"done1"<<endl;
 
 }
+#endif
+void projection()
+{
+	loadtxtfile();
 
+	int i = 0;
+	int j = 0;
+	int k = 0;
+	int x = 0;
+	int y = 0;
+	int l = 0;
+	int z = 0;
+	int data_num = num_points;
+	int gamma_total = 70000;
+	double Sj = data_num / gamma_total;
+	double pi = PI;
+	double r = 320;
+	int cnt = 0;
+	int pixel_num = image_pixel_num;
+
+
+	//insert coordinates
+	for (i = 0; i < 3600; i++) {
+		int row = i / 60;
+		int colomn = i % 60;
+		image[i].theta = ((-30 + colomn)) *pi/180;
+		image[i].phi = ((-30 + row)) * pi/180;
+		image[i].x = r*cos(((-30 + colomn)) *pi/180)*sin(((-30 + row)) * pi/180);
+		image[i].y = r*sin(((-30 + row)) * pi/180)*sin(((-30 + colomn)) *pi/180);
+		image[i].z = r*cos(((-30 + row)) * pi/180);
+		image[i].like = 0;
+	}
+
+	for(j = 0; j < 3600; j++){
+		for(i = 0; i < data_num; i++){
+			if(vector_angle(image[j], d1[i],d1[i],d2[i]) <= scattering_angle(d1[i].energy, d2[i].energy) + (0.5 * pi/180)
+			&& vector_angle(image[j], d1[i], d1[i], d2[i]) >= scattering_angle(d1[i].energy, d2[i].energy) - (0.5 * pi/180)){
+				image[j].like = image[j].like + 1;
+			}
+		}
+	}
+	ofstream fout1;
+	fout1.open("reconstruction1.txt");
+
+	for (j = 0; j < 3600; j++){
+		if(image[j].like != 0){
+			fout1 << j <<", "<<image[j].like << endl; 
+		}
+	}
+	if (fout1.is_open() == true)
+	{
+		fout1.close();
+	}
+
+	///tij*ramda   image pixel related with parameter j, data-bin num i, data_num k, iteration l
+	for(cnt = 0; cnt < 1; cnt++){
+		for(j = 0; j < 300; j++){
+			for(k = 0; k < 300; k++){
+				if(image[k].like != 0){
+					for(i=0; i < 10; i++){
+						image[j].like=(image[j].like / Sj)*system_matrix(image[j],d1[i],d2[i])/(system_matrix(image[k], d1[i], d2[i])*image[k].like);
+					}
+				}
+			}
+		}
+		cnt++;
+	}
+	ofstream fout;
+	fout.open("reconstruction2.txt");
+
+	for (j = 0; j < 3600; j++){
+		if(image[j].like != 0){
+			fout << j <<", "<<image[j].like << endl; 
+		}
+	}
+	if (fout.is_open() == true)
+	{
+		fout.close();
+	}
+
+	cout<<"all the iteration were done!" << endl;
+}
 void voxel_simulation()
 {
 
@@ -375,7 +506,8 @@ void voxel_simulation()
 	double max = -10.0;
 	double min = 10000.0;
 
-	Reconstruction();
+	//Reconstruction();
+	projection();
 
 	cout << "complete1" << endl;
 
