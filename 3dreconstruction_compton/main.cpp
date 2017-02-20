@@ -431,7 +431,7 @@ void projection()
 	int gamma_total = 70000;
 	double Sj = data_num / gamma_total;
 	double pi = PI;
-	double r = 320;
+	double r = 1000;
 	int cnt = 0;
 	int pixel_num = image_pixel_num;
 
@@ -440,8 +440,8 @@ void projection()
 	for (i = 0; i < 3600; i++) {
 		int row = i / 60;
 		int colomn = i % 60;
-		image[i].theta = ((-30 + colomn)) *pi/180;
-		image[i].phi = ((-30 + row)) * pi/180;
+		image[i].theta = ((-30 + colomn));
+		image[i].phi = ((-30 + row));
 		image[i].x = r*cos(((-30 + colomn)) *pi/180)*sin(((-30 + row)) * pi/180);
 		image[i].y = r*sin(((-30 + row)) * pi/180)*sin(((-30 + colomn)) *pi/180);
 		image[i].z = r*cos(((-30 + row)) * pi/180);
@@ -450,8 +450,8 @@ void projection()
 	
 	for(j = 0; j < 3600; j++){
 		for(i = 0; i < data_num; i++){
-			if(vector_angle(image[j], d1[i],d1[i],d2[i]) <= scattering_angle(d1[i].energy, d2[i].energy) + (0.5 * pi/180)
-			&& vector_angle(image[j], d1[i], d1[i], d2[i]) >= scattering_angle(d1[i].energy, d2[i].energy) - (0.5 * pi/180)){
+			if(vector_angle(image[j], d1[i],d1[i],d2[i]) <= scattering_angle(d1[i].energy, d2[i].energy) + ((0.5/r) * pi/180)
+			&& vector_angle(image[j], d1[i], d1[i], d2[i]) >= scattering_angle(d1[i].energy, d2[i].energy) - ((0.5/r) * pi/180)){
 				image[j].like = image[j].like + 1;
 			}
 		}
@@ -481,30 +481,30 @@ void projection()
 	}
 
 	///tij*ramda   image pixel related with parameter j, data-bin num i, data_num k, iteration l
-	for(cnt = 0; cnt < 1; cnt++){
-		for(j = 0; j < 300; j++){
-			for(k = 0; k < 300; k++){
-				if(image[k].like != 0){
-					for(i=0; i < 10; i++){
-						image[j].like=(image[j].like / Sj)*system_matrix(image[j],d1[i],d2[i])/(system_matrix(image[k], d1[i], d2[i])*image[k].like);
-					}
-				}
-			}
-		}
-		cnt++;
+	/*for(cnt = 0; cnt < 1; cnt++){
+	for(j = 0; j < 300; j++){
+	for(k = 0; k < 300; k++){
+	if(image[k].like != 0){
+	for(i=0; i < 10; i++){
+	image[j].like=(image[j].like / Sj)*system_matrix(image[j],d1[i],d2[i])/(system_matrix(image[k], d1[i], d2[i])*image[k].like);
+	}
+	}
+	}
+	}
+	cnt++;
 	}
 	ofstream fout;
 	fout.open("reconstruction2.txt");
 
 	for (j = 0; j < 3600; j++){
-		if(image[j].like != 0){
-			fout << j <<", "<<image[j].like << endl; 
-		}
+	if(image[j].like != 0){
+	fout << j <<", "<<image[j].like << endl; 
+	}
 	}
 	if (fout.is_open() == true)
 	{
-		fout.close();
-	}
+	fout.close();
+	}*/
 
 	cout<<"all the iteration were done!" << endl;
 }
@@ -524,7 +524,7 @@ void voxel_simulation()
 
 	GLfloat changing[] = {0.5, 0.5, 1.0, 1.0}; //Blue
 
-	for(i = 0; i < max_x; i++){
+	/*for(i = 0; i < max_x; i++){
 		for(j = 0; j< max_y; j++){
 			for(k = 0; k < max_z; k++){
 				if(voxel_position[i][j][k].vol > max){
@@ -535,37 +535,71 @@ void voxel_simulation()
 				}
 			}
 		}
+	}*/
+	for(i = 0; i < 3600; i ++){
+		if(image[i].like > max){
+			max = image[i].like;
+		}
+		if(image[i].like < min){
+			min = image[i].like;
+		}
 	}
 	//printf("%lf, %lf \n", max, min);
 
-	for(i = 0; i < max_x; i++){
-		for(j = 0; j< max_y; j++){
-			for(k = 0; k < max_z; k++){
-				if(voxel_position[i][j][k].vol > 0){
-					glPushMatrix();
-					//glEnable(GL_BLEND);
-					if(voxel_position[i][j][k].vol < (max + min) / 2){
-						changing[0] = (voxel_position[i][j][k].vol - min) / ((max - min) / 2)  ;
-						changing[1] = 0.1;
-						changing[2] = ((max + min) / 2 - voxel_position[i][j][k].vol)/((max - min) / 2);
-						glColor3f((voxel_position[i][j][k].vol - min) / ((max - min) / 2), 0.1, ((max + min) / 2 - voxel_position[i][j][k].vol)/((max - min) / 2));
-					}
-					else{
-						changing[0] = (max - voxel_position[i][j][k].vol) / ((max - min) / 2)  ;
-						changing[1] = (voxel_position[i][j][k].vol - (max + min) / 2) / ((max - min) / 2);
-						changing[2] = 0.1;
-						glColor3f((voxel_position[i][j][k].vol - (max + min) / 2) / ((max - min) / 2),(max - voxel_position[i][j][k].vol) / ((max - min) / 2), 0.1);
-						//printf("%f, %f, %f \n", changing[0], changing[1], changing[2]);
-					}
-					//glColor3f(0.0, 0.5, 0.8);
-					//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, changing);
-					glTranslated((GLdouble)voxel_position[i][j][k].x, (GLdouble)voxel_position[i][j][k].z, (GLdouble)voxel_position[i][j][k].y);
-					glutSolidCube(0.5);
-					glPopMatrix();
-					cnt++;
-				}
+	//for(i = 0; i < max_x; i++){
+	//	for(j = 0; j< max_y; j++){
+	//		for(k = 0; k < max_z; k++){
+	//			if(voxel_position[i][j][k].vol > 0){
+	//				glPushMatrix();
+	//				//glEnable(GL_BLEND);
+	//				if(voxel_position[i][j][k].vol < (max + min) / 2){
+	//					changing[0] = (voxel_position[i][j][k].vol - min) / ((max - min) / 2)  ;
+	//					changing[1] = 0.1;
+	//					changing[2] = ((max + min) / 2 - voxel_position[i][j][k].vol)/((max - min) / 2);
+	//					glColor3f((voxel_position[i][j][k].vol - min) / ((max - min) / 2), 0.1, ((max + min) / 2 - voxel_position[i][j][k].vol)/((max - min) / 2));
+	//				}
+	//				else{
+	//					changing[0] = (max - voxel_position[i][j][k].vol) / ((max - min) / 2)  ;
+	//					changing[1] = (voxel_position[i][j][k].vol - (max + min) / 2) / ((max - min) / 2);
+	//					changing[2] = 0.1;
+	//					glColor3f((voxel_position[i][j][k].vol - (max + min) / 2) / ((max - min) / 2),(max - voxel_position[i][j][k].vol) / ((max - min) / 2), 0.1);
+	//					//printf("%f, %f, %f \n", changing[0], changing[1], changing[2]);
+	//				}
+	//				//glColor3f(0.0, 0.5, 0.8);
+	//				//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, changing);
+	//				glTranslated((GLdouble)voxel_position[i][j][k].x, (GLdouble)voxel_position[i][j][k].z, (GLdouble)voxel_position[i][j][k].y);
+	//				glutSolidCube(0.5);
+	//				glPopMatrix();
+	//				cnt++;
+	//			}
+	//		}
+	//	}
+	//}
+	for(i = 0; i < 3600; i++){
+		if(image[i].like > 0){
+			glPushMatrix();
+			//glEnable(GL_BLEND);
+			if(image[i].like < (max + min) / 2){
+				changing[0] = (image[i].like - min) / ((max - min) / 2)  ;
+				changing[1] = 0.1;
+				changing[2] = ((max + min) / 2 - image[i].like)/((max - min) / 2);
+				glColor3f((image[i].like - min) / ((max - min) / 2), 0.1, ((max + min) / 2 - image[i].like)/((max - min) / 2));
 			}
+			else{
+				changing[0] = (max - image[i].like) / ((max - min) / 2)  ;
+				changing[1] = (image[i].like - (max + min) / 2) / ((max - min) / 2);
+				changing[2] = 0.1;
+				glColor3f((image[i].like - (max + min) / 2) / ((max - min) / 2),(max - image[i].like) / ((max - min) / 2), 0.1);
+				//printf("%f, %f, %f \n", changing[0], changing[1], changing[2]);
+			}
+			//glColor3f(0.0, 0.5, 0.8);
+			//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, changing);
+			glTranslated((GLdouble)image[i].theta, (GLdouble)0.0, (GLdouble)image[i].phi);
+			glutSolidCube(1);
+			glPopMatrix();
+			cnt++;
 		}
+	
 	}
 	cout << cnt << endl;
 	//glPushMatrix();
